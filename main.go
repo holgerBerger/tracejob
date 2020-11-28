@@ -5,6 +5,8 @@ import (
 	flags "github.com/jessevdk/go-flags"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"sync"
 )
 
@@ -36,14 +38,18 @@ func main() {
 		indexFiles(&fileindex, []string{BASEPATH + "nqs_jmd*"})
 	}
 
+	// debug
 	for i := range fileindex {
 		fmt.Printf("%s: %s - %s\n", i, fileindex[i].first.String(), fileindex[i].last.String())
 	}
 
+	// file lists
 	nqsfiles, _ := filepath.Glob(BASEPATH + "batch_server_log*")
 	jmfiles, _ := filepath.Glob(BASEPATH + "nqs_jmd*")
 
 	alllogs := NewAllogs()
+
+	// FIXME add filter logic to read only necessary files
 
 	wg := &sync.WaitGroup{}
 	if !opts.NoServer {
@@ -60,8 +66,22 @@ func main() {
 	}
 	wg.Wait()
 
+	sort.SliceStable(alllogs.logs, func(i, j int) bool {
+		return alllogs.logs[i][:15] < alllogs.logs[j][:15]
+	})
 	for _, l := range alllogs.logs {
-		fmt.Printf(l)
+		filtered := false
+		if len(opts.Filter) > 0 {
+			for _, fword := range opts.Filter {
+				if strings.Contains(l, fword) {
+					filtered = true
+					break
+				}
+			}
+		}
+		if !filtered {
+			fmt.Printf(l)
+		}
 	}
 
 }
