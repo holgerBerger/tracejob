@@ -9,6 +9,7 @@ import (
 	"sync"
 )
 
+// read a nqs logfile and attach lines to <alllogs>
 func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.WaitGroup) {
 	loglines := make([]string, 0, 10000)
 	rids := make([]string, 0, 10)
