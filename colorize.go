@@ -18,16 +18,16 @@ func initcolors() {
 	if opts.Light {
 		red = RGB{200, 0, 0}
 		green = RGB{0, 200, 0}
-		blue = RGB{0, 0, 200}
+		blue = RGB{100, 100, 255}
 		purple = RGB{100, 100, 100}
 		orange = RGB{255, 100, 0}
 	}
 	if opts.Dark {
 		red = RGB{255, 0, 0}
 		green = RGB{0, 255, 0}
-		blue = RGB{0, 0, 255}
+		blue = RGB{100, 100, 255}
 		purple = RGB{200, 200, 200}
-		orange = RGB{255, 100, 0}
+		orange = RGB{255, 255, 0}
 	}
 	colormap = map[string]RGB{
 		"SUSPEND":         red,

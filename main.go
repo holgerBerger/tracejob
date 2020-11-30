@@ -12,15 +12,16 @@ import (
 )
 
 // where all the file located?
-const BASEPATH string = "/home/hobel/big/var/opt/nec/nqsv/"
+const BASEPATH string = "/var/opt/nec/nqsv/"
 
 // command line options
 var opts struct {
-	Days     int      `long:"days" short:"n" description:"number of days to search"`
-	NoServer bool     `long:"noserver" short:"s" default:"false" description:"do not read batch server logs"`
-	NoJM     bool     `long:"nojm" short:"j" default:"false" description:"do not read job manipulator logs"`
-	Light    bool     `long:"light" short:"l" description:"colorize output for light terminals"`
-	Dark     bool     `long:"dark" short:"d" description:"colorize output for dark terminals"`
+	Days     int      `long:"days" short:"n" default:"1" description:"number of days to search"`
+	NoServer bool     `long:"noserver" short:"s"  description:"do not read batch server logs"`
+	NoJM     bool     `long:"nojm" short:"j"  description:"do not read job manipulator logs"`
+	Light    bool     `long:"light" short:"l"  description:"colorize output for light terminals"`
+	Dark     bool     `long:"dark" short:"d"  description:"colorize output for dark terminals"`
+	NoColor  bool     `long:"nocolor" short:"c" description:"do not colorize output"`
 	Filter   []string `long:"filter" short:"f" description:"filter out lines containing this word"`
 	Verbose  bool     `long:"verbose" short:"v" description:"ve more verbose"`
 }
@@ -28,9 +29,8 @@ var opts struct {
 func main() {
 
 	args, err := flags.Parse(&opts)
-
 	if err != nil {
-		fmt.Println(err.Error())
+		//fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
@@ -42,6 +42,15 @@ func main() {
 	}
 	if !opts.NoJM {
 		indexFiles(&fileindex, []string{BASEPATH + "nqs_jmd*"})
+	}
+
+	// normalize job ids
+	for i, _ := range args {
+		if strings.Contains(args[i], ".") {
+			args[i] = strings.Split(args[i], ".")[0] + "."
+		} else {
+			args[i] = args[i] + "."
+		}
 	}
 
 	/*
@@ -92,7 +101,7 @@ func main() {
 	wg.Wait()
 
 	// sort and print
-	if opts.Dark || opts.Light {
+	if !opts.NoColor && (opts.Dark || opts.Light) {
 		initcolors()
 	}
 	sort.SliceStable(alllogs.logs, func(i, j int) bool {
@@ -109,7 +118,7 @@ func main() {
 			}
 		}
 		if !filtered {
-			if opts.Dark || opts.Light {
+			if !opts.NoColor && (opts.Dark || opts.Light) {
 				colorize(&l)
 			}
 			fmt.Printf(l)
