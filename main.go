@@ -23,7 +23,7 @@ var opts struct {
 	Dark     bool     `long:"dark" short:"d"  description:"colorize output for dark terminals"`
 	NoColor  bool     `long:"nocolor" short:"c" description:"do not colorize output"`
 	Filter   []string `long:"filter" short:"f" description:"filter out lines containing this word"`
-	Verbose  bool     `long:"verbose" short:"v" description:"ve more verbose"`
+	Verbose  bool     `long:"verbose" short:"v" description:"be more verbose"`
 }
 
 func main() {
