@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -86,6 +87,11 @@ func initcolors() {
 	for s := range colormap {
 		cls = append(cls, s)
 	}
+
+	sort.SliceStable(cls, func(i, j int) bool {
+		return len(cls[i]) > len(cls[j])
+	})
+
 }
 
 func colorize(line *string) {
