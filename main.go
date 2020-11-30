@@ -19,7 +19,8 @@ var opts struct {
 	Days     int      `long:"days" short:"n" description:"number of days to search"`
 	NoServer bool     `long:"noserver" short:"s" default:"false" description:"do not read batch server logs"`
 	NoJM     bool     `long:"nojm" short:"j" default:"false" description:"do not read job manipulator logs"`
-	NoColor  bool     `long:"nocolor" short:"c" description:"do not colorize output"`
+	Light    bool     `long:"light" short:"l" description:"colorize output for light terminals"`
+	Dark     bool     `long:"dark" short:"d" description:"colorize output for dark terminals"`
 	Filter   []string `long:"filter" short:"f" description:"filter out lines containing this word"`
 	Verbose  bool     `long:"verbose" short:"v" description:"ve more verbose"`
 }
@@ -91,6 +92,9 @@ func main() {
 	wg.Wait()
 
 	// sort and print
+	if opts.Dark || opts.Light {
+		initcolors()
+	}
 	sort.SliceStable(alllogs.logs, func(i, j int) bool {
 		return alllogs.logs[i][:15] < alllogs.logs[j][:15]
 	})
@@ -105,8 +109,12 @@ func main() {
 			}
 		}
 		if !filtered {
+			if opts.Dark || opts.Light {
+				colorize(&l)
+			}
 			fmt.Printf(l)
 		}
 	}
+	fmt.Printf("\033[0m")
 
 }
