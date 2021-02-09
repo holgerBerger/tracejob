@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -36,6 +37,12 @@ func indexFiles(fi *map[string]fileIndex, globlist []string) {
 						defer f.Close()
 						line, _ := r.ReadBytes('\n')
 						firstline := string(line)
+						// read second line if first line is special line
+						if strings.Index(firstline, "NQSV(DATE)") > 0 {
+							line, _ = r.ReadBytes('\n')
+							firstline = string(line)
+						}
+
 						// fmt.Println("firstline:", firstline)
 						f.Seek(-1024, 2)
 						lastline := ""
@@ -57,7 +64,9 @@ func indexFiles(fi *map[string]fileIndex, globlist []string) {
 								firsttime = parsed
 								//	fmt.Println(firsttime.String())
 							} else {
-								fmt.Println("error in Parsing fistline of ", file, ":", err.Error())
+								fmt.Println("error in Parsing firstline of ", file, ":", err.Error())
+								fmt.Println(firstline)
+
 							}
 						} else {
 							return

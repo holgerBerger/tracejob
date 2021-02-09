@@ -1,5 +1,7 @@
 package main
 
+// see https://gist.github.com/XVilka/8346728 for nice summary of state of true color
+
 import (
 	"fmt"
 	"sort"
