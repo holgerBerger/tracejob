@@ -15,6 +15,27 @@ type fileIndex struct {
 	first, last time.Time
 }
 
+func indexArchiveFiles(fi *map[string]fileIndex, globlist []string) {
+	for _, glob := range globlist {
+		filelist, err := filepath.Glob(glob)
+		if err == nil {
+			for _, file := range filelist {
+				// batch_server_log.2021-03-06T20-05-00.2021-03-07T11-55-00.xz
+				parts := strings.Split(file, ".")
+				firsttime, err := time.Parse("2006-01-02T15-04-05", parts[len(parts)-2])
+				if err != nil {
+					continue
+				}
+				lasttime, err := time.Parse("2006-01-02T15-04-05", parts[len(parts)-3])
+				if err != nil {
+					continue
+				}
+				(*fi)[file] = fileIndex{firsttime, lasttime}
+			}
+		}
+	}
+}
+
 // read first and lastline of files and parse date in parallel
 func indexFiles(fi *map[string]fileIndex, globlist []string) {
 	year := strconv.Itoa(time.Now().Year())

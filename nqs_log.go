@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/ulikunitz/xz"
 	"os"
 	"regexp"
 	"strings"
@@ -10,7 +11,8 @@ import (
 )
 
 // read a nqs logfile and attach lines to <alllogs>
-func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.WaitGroup) {
+func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.WaitGroup, archive bool) {
+	var reader *bufio.Reader
 	loglines := make([]string, 0, 10000)
 	rids := make([]string, 0, 10)
 	r := regexp.MustCompile(`.*gmr_attach_rcb: (.*): .*request. \(rid (.*) qid`)
@@ -18,7 +20,17 @@ func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.Wai
 	file, err := os.Open(filename)
 	if err == nil {
 		fmt.Println("reading", filename, "...")
-		reader := bufio.NewReaderSize(file, 16*1024*1024)
+		if archive {
+			breader := bufio.NewReaderSize(file, 16*1024*1024)
+			xzreader, _ := xz.NewReader(breader)
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+			reader = bufio.NewReaderSize(xzreader, 16*1024*1024)
+		} else {
+			reader = bufio.NewReaderSize(file, 16*1024*1024)
+		}
 		for {
 			match := false
 			line, err := reader.ReadString('\n')

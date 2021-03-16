@@ -39,9 +39,11 @@ func main() {
 	// do not read when not wanted server or jm logs
 	if !opts.NoServer {
 		indexFiles(&fileindex, []string{BASEPATH + "batch_server_log*"})
+		indexArchiveFiles(&fileindex, []string{BASEPATH + "logarchive/" + "batch_server_log*.xz"})
 	}
 	if !opts.NoJM {
 		indexFiles(&fileindex, []string{BASEPATH + "nqs_jmd*"})
+		indexArchiveFiles(&fileindex, []string{BASEPATH + "logarchive/" + "nqs_jmd*.xz"})
 	}
 
 	// normalize job ids
@@ -63,6 +65,10 @@ func main() {
 	// file lists
 	nqsfiles, _ := filepath.Glob(BASEPATH + "batch_server_log*")
 	jmfiles, _ := filepath.Glob(BASEPATH + "nqs_jmd*")
+
+	// archive files
+	anqsfiles, _ := filepath.Glob(BASEPATH + "logarchive/" + "batch_server_log*.xz")
+	ajmfiles, _ := filepath.Glob(BASEPATH + "logarchive/" + "nqs_jmd*.xz")
 
 	// find which files to read, depending on days parameter
 	filefilter := make(map[string]bool)
@@ -86,7 +92,13 @@ func main() {
 		for _, file := range nqsfiles {
 			if filefilter[file] {
 				wg.Add(1)
-				go read_nqs_log(file, args, &alllogs, wg)
+				go read_nqs_log(file, args, &alllogs, wg, false)
+			}
+		}
+		for _, file := range anqsfiles {
+			if filefilter[file] {
+				wg.Add(1)
+				go read_nqs_log(file, args, &alllogs, wg, true)
 			}
 		}
 	}
@@ -94,7 +106,13 @@ func main() {
 		for _, file := range jmfiles {
 			if filefilter[file] {
 				wg.Add(1)
-				go read_jm_log(file, args, &alllogs, wg)
+				go read_jm_log(file, args, &alllogs, wg, false)
+			}
+		}
+		for _, file := range ajmfiles {
+			if filefilter[file] {
+				wg.Add(1)
+				go read_jm_log(file, args, &alllogs, wg, true)
 			}
 		}
 	}
