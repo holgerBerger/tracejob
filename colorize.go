@@ -46,6 +46,7 @@ func initcolors() {
 		"ERROR":           red,
 		"completed":       green,
 		"SUCCEED":         green,
+		"qid":             green,
 		"Output_reqinfo":  blue,
 		" SIG":            blue,
 		"RST_ARRIVING":    blue,

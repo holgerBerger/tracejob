@@ -5,6 +5,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -23,6 +24,7 @@ var opts struct {
 	Dark     bool     `long:"dark" short:"d"  description:"colorize output for dark terminals"`
 	NoColor  bool     `long:"nocolor" short:"c" description:"do not colorize output"`
 	Filter   []string `long:"filter" short:"f" description:"filter out lines containing this word"`
+	Grep     []string `long:"grep" short:"g" description:"show only lines matching regexp"`
 	Verbose  bool     `long:"verbose" short:"v" description:"be more verbose"`
 }
 
@@ -118,6 +120,18 @@ func main() {
 	}
 	wg.Wait()
 
+	compiled_regexp := make([]*regexp.Regexp, 0, len(opts.Grep))
+	if len(opts.Grep) > 0 {
+		for _, reg := range opts.Grep {
+			r, err := regexp.Compile(reg)
+			if err != nil {
+				fmt.Printf("could not compile regexp <%s>: %s\n", reg, err.Error())
+			} else {
+				compiled_regexp = append(compiled_regexp, r)
+			}
+		}
+	}
+
 	// sort and print
 	if !opts.NoColor && (opts.Dark || opts.Light) {
 		initcolors()
@@ -135,11 +149,24 @@ func main() {
 				}
 			}
 		}
-		if !filtered {
-			if !opts.NoColor && (opts.Dark || opts.Light) {
-				colorize(&l)
+		grepped := true
+		if len(opts.Grep) > 0 {
+			grepped = false
+			for _, regexp := range compiled_regexp {
+				match := regexp.MatchString(l)
+				if match {
+					grepped = true
+					break
+				}
 			}
-			fmt.Printf(l)
+		}
+		if !filtered {
+			if grepped {
+				if !opts.NoColor && (opts.Dark || opts.Light) {
+					colorize(&l)
+				}
+				fmt.Printf(l)
+			}
 		}
 	}
 	fmt.Printf("\033[0m")

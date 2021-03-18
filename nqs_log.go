@@ -3,7 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/ulikunitz/xz"
+	//"github.com/ulikunitz/xz"
+	"github.com/xi2/xz"
 	"os"
 	"regexp"
 	"strings"
@@ -22,7 +23,7 @@ func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.Wai
 		fmt.Println("reading", filename, "...")
 		if archive {
 			breader := bufio.NewReaderSize(file, 16*1024*1024)
-			xzreader, _ := xz.NewReader(breader)
+			xzreader, _ := xz.NewReader(breader, 0)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
