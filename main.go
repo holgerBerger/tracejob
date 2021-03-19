@@ -18,6 +18,7 @@ const BASEPATH string = "/var/opt/nec/nqsv/"
 // command line options
 var opts struct {
 	Days     int      `long:"days" short:"n" default:"1" description:"number of days to search"`
+	Archive  bool     `long:"archive" short:"a" description:"access archived logfiles as well"`
 	NoServer bool     `long:"noserver" short:"s"  description:"do not read batch server logs"`
 	NoJM     bool     `long:"nojm" short:"j"  description:"do not read job manipulator logs"`
 	Light    bool     `long:"light" short:"l"  description:"colorize output for light terminals"`
@@ -41,11 +42,15 @@ func main() {
 	// do not read when not wanted server or jm logs
 	if !opts.NoServer {
 		indexFiles(&fileindex, []string{BASEPATH + "batch_server_log*"})
-		indexArchiveFiles(&fileindex, []string{BASEPATH + "logarchive/" + "batch_server_log*.xz"})
+		if opts.Archive {
+			indexArchiveFiles(&fileindex, []string{BASEPATH + "logarchive/" + "batch_server_log*.xz"})
+		}
 	}
 	if !opts.NoJM {
 		indexFiles(&fileindex, []string{BASEPATH + "nqs_jmd*"})
-		indexArchiveFiles(&fileindex, []string{BASEPATH + "logarchive/" + "nqs_jmd*.xz"})
+		if opts.Archive {
+			indexArchiveFiles(&fileindex, []string{BASEPATH + "logarchive/" + "nqs_jmd*.xz"})
+		}
 	}
 
 	// normalize job ids
@@ -69,8 +74,12 @@ func main() {
 	jmfiles, _ := filepath.Glob(BASEPATH + "nqs_jmd*")
 
 	// archive files
-	anqsfiles, _ := filepath.Glob(BASEPATH + "logarchive/" + "batch_server_log*.xz")
-	ajmfiles, _ := filepath.Glob(BASEPATH + "logarchive/" + "nqs_jmd*.xz")
+	anqsfiles := make([]string, 0)
+	ajmfiles := make([]string, 0)
+	if opts.Archive {
+		anqsfiles, _ = filepath.Glob(BASEPATH + "logarchive/" + "batch_server_log*.xz")
+		ajmfiles, _ = filepath.Glob(BASEPATH + "logarchive/" + "nqs_jmd*.xz")
+	}
 
 	// find which files to read, depending on days parameter
 	filefilter := make(map[string]bool)
@@ -97,10 +106,12 @@ func main() {
 				go read_nqs_log(file, args, &alllogs, wg, false)
 			}
 		}
-		for _, file := range anqsfiles {
-			if filefilter[file] {
-				wg.Add(1)
-				go read_nqs_log(file, args, &alllogs, wg, true)
+		if opts.Archive {
+			for _, file := range anqsfiles {
+				if filefilter[file] {
+					wg.Add(1)
+					go read_nqs_log(file, args, &alllogs, wg, true)
+				}
 			}
 		}
 	}
@@ -111,10 +122,12 @@ func main() {
 				go read_jm_log(file, args, &alllogs, wg, false)
 			}
 		}
-		for _, file := range ajmfiles {
-			if filefilter[file] {
-				wg.Add(1)
-				go read_jm_log(file, args, &alllogs, wg, true)
+		if opts.Archive {
+			for _, file := range ajmfiles {
+				if filefilter[file] {
+					wg.Add(1)
+					go read_jm_log(file, args, &alllogs, wg, true)
+				}
 			}
 		}
 	}
