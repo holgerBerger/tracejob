@@ -21,6 +21,7 @@ var opts struct {
 	Archive  bool     `long:"archive" short:"a" description:"access archived logfiles as well"`
 	NoServer bool     `long:"noserver" short:"s"  description:"do not read batch server logs"`
 	NoJM     bool     `long:"nojm" short:"j"  description:"do not read job manipulator logs"`
+	JSV      bool     `long:"JSV" short:"J" description:"do also show JSV information"`
 	Light    bool     `long:"light" short:"l"  description:"colorize output for light terminals"`
 	Dark     bool     `long:"dark" short:"d"  description:"colorize output for dark terminals"`
 	NoColor  bool     `long:"nocolor" short:"c" description:"do not colorize output"`

@@ -15,8 +15,11 @@ import (
 func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.WaitGroup, archive bool) {
 	var reader *bufio.Reader
 	loglines := make([]string, 0, 10000)
-	rids := make([]string, 0, 10)
-	r := regexp.MustCompile(`.*gmr_attach_rcb: (.*): .*request. \(rid (.*) qid`)
+	rids := make(map[string]bool)
+	jsvs := make(map[string]bool)
+	r_rids := regexp.MustCompile(`.*gmr_attach_rcb: (.*): .*request. \(rid (.*) qid`)
+	r_jsvs1 := regexp.MustCompile(`.*jcb_alloc: (.*),.*,(.*): JCB was attached.`)
+	r_jsvs2 := regexp.MustCompile(`.*jcb_free: (.*),.*,(.*): JCB was detatched.`)
 
 	file, err := os.Open(filename)
 	if err == nil {
@@ -48,23 +51,51 @@ func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.Wai
 					//fmt.Print("append ", line)
 					// find r... numer of jobs and add to list
 					if strings.Contains(line, "gmr_attach_rcb") {
-						m := r.FindStringSubmatch(string(line))
+						m := r_rids.FindStringSubmatch(string(line))
 						if m != nil {
-							rids = append(rids, m[1])
+							rids[m[1]] = true
 						}
 					}
 				}
-				if !match {
-					// check if line might contain a r..... match
-					for _, rid := range rids {
-						if strings.Contains(line, rid) {
+			} // job
+			if !match {
+				// check if line might contain a r..... match
+				for rid, _ := range rids {
+					if strings.Contains(line, rid) {
+						match = true
+						loglines = append(loglines, string(line))
+						//fmt.Print("-append ", line)
+					}
+				}
+				if opts.JSV {
+					if strings.Contains(line, "jcb_alloc") {
+						m := r_jsvs1.FindStringSubmatch(string(line))
+						if m != nil {
+							_, ok := rids[m[2]]
+							if ok {
+								jsvs[m[1]] = true
+								loglines = append(loglines, string(line))
+							}
+						}
+					} else if strings.Contains(line, "jcb_free") {
+						m := r_jsvs2.FindStringSubmatch(string(line))
+						if m != nil {
+							_, ok := rids[m[2]]
+							if ok {
+								delete(jsvs, m[1])
+								loglines = append(loglines, string(line))
+							}
+						}
+					}
+					for jsv, _ := range jsvs {
+						if strings.Contains(line, jsv+":") || strings.Contains(line, jsv+",") {
 							match = true
 							loglines = append(loglines, string(line))
 							//fmt.Print("-append ", line)
 						}
 					}
-				}
-			} // job
+				} // JSV
+			}
 		}
 		file.Close()
 	}
