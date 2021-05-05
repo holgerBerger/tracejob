@@ -100,6 +100,19 @@ func main() {
 		}
 	}
 
+	// compile regexp early
+	compiled_regexp := make([]*regexp.Regexp, 0, len(opts.Grep))
+	if len(opts.Grep) > 0 {
+		for _, reg := range opts.Grep {
+			r, err := regexp.Compile(reg)
+			if err != nil {
+				fmt.Printf("could not compile regexp <%s>: %s\n", reg, err.Error())
+			} else {
+				compiled_regexp = append(compiled_regexp, r)
+			}
+		}
+	}
+
 	// read log files
 	alllogs := NewAllogs()
 
@@ -137,18 +150,6 @@ func main() {
 		}
 	}
 	wg.Wait()
-
-	compiled_regexp := make([]*regexp.Regexp, 0, len(opts.Grep))
-	if len(opts.Grep) > 0 {
-		for _, reg := range opts.Grep {
-			r, err := regexp.Compile(reg)
-			if err != nil {
-				fmt.Printf("could not compile regexp <%s>: %s\n", reg, err.Error())
-			} else {
-				compiled_regexp = append(compiled_regexp, r)
-			}
-		}
-	}
 
 	// sort and print
 	if !opts.NoColor && (opts.Dark || opts.Light) {
