@@ -67,7 +67,7 @@ func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.Wai
 						//fmt.Print("-append ", line)
 					}
 				}
-				if opts.JSV {
+				if opts.JSV || opts.Clients {
 					if strings.Contains(line, "jcb_alloc") {
 						m := r_jsvs1.FindStringSubmatch(string(line))
 						if m != nil {
@@ -78,10 +78,12 @@ func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.Wai
 									fmt.Println("using jsv", m[1], "host:", JSVmap[m[1][1:]])
 								}
 								go Clientlogs.Fetch(JSVmap[m[1][1:]])
-								loglines = append(loglines, string(line))
+								if opts.JSV {
+									loglines = append(loglines, string(line))
+								}
 							}
 						}
-					} else if strings.Contains(line, "jcb_free") {
+					} else if opts.JSV && strings.Contains(line, "jcb_free") {
 						m := r_jsvs2.FindStringSubmatch(string(line))
 						if m != nil {
 							_, ok := rids[m[2]]
@@ -91,11 +93,13 @@ func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.Wai
 							}
 						}
 					}
-					for jsv, _ := range jsvs {
-						if strings.Contains(line, jsv+":") || strings.Contains(line, jsv+",") {
-							match = true
-							loglines = append(loglines, string(line))
-							//fmt.Print("-append ", line)
+					if opts.JSV {
+						for jsv, _ := range jsvs {
+							if strings.Contains(line, jsv+":") || strings.Contains(line, jsv+",") {
+								match = true
+								loglines = append(loglines, string(line))
+								//fmt.Print("-append ", line)
+							}
 						}
 					}
 				} // JSV
