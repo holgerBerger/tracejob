@@ -21,7 +21,8 @@ var opts struct {
 	Archive  bool     `long:"archive" short:"a" description:"access archived logfiles as well (slower)"`
 	NoServer bool     `long:"noserver" short:"s"  description:"do not read batch server logs"`
 	NoJM     bool     `long:"nojm" short:"j"  description:"do not read job manipulator logs"`
-	JSV      bool     `long:"JSV" short:"J" description:"also show JSV information (verbose)"`
+	JSV      bool     `long:"jsv" short:"J" description:"also show JSV information (verbose)"`
+	Clients  bool     `long:"client" short:"C" description:"fetch logs from involved NQSV clients"`
 	Light    bool     `long:"light" short:"l"  description:"colorize output for light terminals"`
 	Dark     bool     `long:"dark" short:"d"  description:"colorize output for dark terminals"`
 	NoColor  bool     `long:"nocolor" short:"c" description:"do not colorize output (default)"`
@@ -30,6 +31,11 @@ var opts struct {
 	Grep     []string `long:"grep" short:"g" description:"show only lines matching regexp"`
 	Verbose  bool     `long:"verbose" short:"v" description:"be more verbose"`
 }
+
+var (
+	JSVmap     map[string]string
+	Clientlogs ClientLog
+)
 
 func main() {
 
@@ -113,6 +119,12 @@ func main() {
 		}
 	}
 
+	// get JSV mapping
+	if opts.Clients {
+		JSVmap = jsvmap()
+		Clientlogs = NewClientlog()
+	}
+
 	// read log files
 	alllogs := NewAllogs()
 
@@ -150,6 +162,12 @@ func main() {
 		}
 	}
 	wg.Wait()
+	// ... done with logfiles
+
+	// wait for all client logs
+	if opts.Clients {
+		Clientlogs.Wait()
+	}
 
 	// sort and print
 	if !opts.NoColor && (opts.Dark || opts.Light) {
