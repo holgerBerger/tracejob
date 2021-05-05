@@ -33,7 +33,10 @@ var opts struct {
 
 func main() {
 
-	args, err := flags.Parse(&opts)
+	// args, err := flags.Parse(&opts)
+	parser := flags.NewParser(&opts, flags.Default)
+	parser.Usage = "[OPTIONS] requestid [...]"
+	args, err := parser.Parse()
 	if err != nil {
 		//fmt.Println(err.Error())
 		os.Exit(1)
