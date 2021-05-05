@@ -100,6 +100,8 @@ func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.Wai
 		file.Close()
 	}
 	//fmt.Println(loglines)
-	alllogs.Append(loglines)
+	if len(loglines) > 0 {
+		alllogs.Append(loglines, filename)
+	}
 	wg.Done()
 }

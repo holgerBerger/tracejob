@@ -18,14 +18,15 @@ const BASEPATH string = "/var/opt/nec/nqsv/"
 // command line options
 var opts struct {
 	Days     int      `long:"days" short:"n" default:"1" description:"number of days to search"`
-	Archive  bool     `long:"archive" short:"a" description:"access archived logfiles as well"`
+	Archive  bool     `long:"archive" short:"a" description:"access archived logfiles as well (slower)"`
 	NoServer bool     `long:"noserver" short:"s"  description:"do not read batch server logs"`
 	NoJM     bool     `long:"nojm" short:"j"  description:"do not read job manipulator logs"`
-	JSV      bool     `long:"JSV" short:"J" description:"do also show JSV information"`
+	JSV      bool     `long:"JSV" short:"J" description:"also show JSV information (verbose)"`
 	Light    bool     `long:"light" short:"l"  description:"colorize output for light terminals"`
 	Dark     bool     `long:"dark" short:"d"  description:"colorize output for dark terminals"`
-	NoColor  bool     `long:"nocolor" short:"c" description:"do not colorize output"`
+	NoColor  bool     `long:"nocolor" short:"c" description:"do not colorize output (default)"`
 	Filter   []string `long:"filter" short:"f" description:"filter out lines containing this word"`
+	Filelist bool     `long:"filelist" short:"F" description:"show list of logfiles with matches"`
 	Grep     []string `long:"grep" short:"g" description:"show only lines matching regexp"`
 	Verbose  bool     `long:"verbose" short:"v" description:"be more verbose"`
 }
@@ -184,5 +185,12 @@ func main() {
 		}
 	}
 	fmt.Printf("\033[0m")
+
+	if opts.Filelist {
+		fmt.Println("\nMinimal list of logfiles with matches:")
+		for f, _ := range alllogs.files {
+			fmt.Println(f)
+		}
+	}
 
 }
