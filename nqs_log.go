@@ -77,7 +77,9 @@ func read_nqs_log(filename string, jobs []string, alllogs *allLogs, wg *sync.Wai
 								if opts.Verbose {
 									fmt.Println("using jsv", m[1], "host:", JSVmap[m[1][1:]])
 								}
-								go Clientlogs.Fetch(JSVmap[m[1][1:]])
+								if opts.Clients {
+									go Clientlogs.Fetch(JSVmap[m[1][1:]])
+								}
 								if opts.JSV {
 									loglines = append(loglines, string(line))
 								}
