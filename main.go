@@ -17,7 +17,8 @@ const BASEPATH string = "/var/opt/nec/nqsv/"
 
 // command line options
 var opts struct {
-	Days     int      `long:"days" short:"n" default:"1" description:"number of days to search"`
+	Days     int      `long:"days" short:"n" default:"1" description:"number of days to search into the past"`
+	Before   int      `long:"before" short:"b" default:"0" description:"limit search of job end, job must be between -n and -b"`
 	Archive  bool     `long:"archive" short:"a" description:"access archived logfiles as well (slower)"`
 	NoServer bool     `long:"noserver" short:"s"  description:"do not read batch server logs"`
 	NoJM     bool     `long:"nojm" short:"j"  description:"do not read job manipulator logs"`
@@ -98,6 +99,9 @@ func main() {
 	for fn, ft := range fileindex {
 		if ft.first.AddDate(0, 0, opts.Days).After(now) {
 			filefilter[fn] = true
+			if ft.last.AddDate(0, 0, opts.Before).After(now) {
+				filefilter[fn] = false
+			}
 		} else {
 			filefilter[fn] = false
 		}
