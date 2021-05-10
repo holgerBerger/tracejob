@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"sync"
 )
+
+const clientlogpathprefix = "/tmp/tracejob_temp/"
 
 type ClientLog struct {
 	clients map[string]bool
@@ -42,7 +46,7 @@ func (cl *ClientLog) Fetch(client string) {
 
 	err = os.Mkdir("/tmp/tracejob_temp", 0700)
 
-	file, err := os.Create("/tmp/tracejob_temp/" + client)
+	file, err := os.Create(clientlogpathprefix + client)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,4 +61,58 @@ func (cl *ClientLog) Fetch(client string) {
 
 func (cl *ClientLog) Wait() {
 	cl.wg.Wait()
+}
+
+// filter for date range, convert date string and filter out some noise
+func (cl *ClientLog) Filter(start string, end string) []string {
+	loglines := make([]string, 0, 1000)
+
+	re := regexp.MustCompile("Vector Engine MMM-Command|journalbeat|ENCRYPT_METHOD|Accepted publickey|sshd")
+
+	for f, _ := range cl.clients {
+		cf, err := os.Open(clientlogpathprefix + f)
+		if err == nil {
+			defer cf.Close()
+
+			scanner := bufio.NewScanner(cf)
+			for scanner.Scan() {
+				line := scanner.Text()
+				line = convertdate(line)
+				if line[:15] >= start && line[:15] <= end {
+					if !re.MatchString(line) {
+						loglines = append(loglines, line+"\n")
+						// fmt.Println("+", line)
+					}
+				}
+			}
+
+			if err := scanner.Err(); err != nil {
+				log.Fatal(err)
+			}
+
+		} // err
+	} // clients
+
+	return loglines
+}
+
+var monthmap = map[string]string{
+	"Jan": "01/",
+	"Feb": "02/",
+	"Mar": "03/",
+	"Apr": "04/",
+	"May": "05/",
+	"Jun": "06/",
+	"Jul": "07/",
+	"Aug": "08/",
+	"Sep": "09/",
+	"Oct": "10/",
+	"Nov": "11/",
+	"Dec": "12/",
+}
+
+func convertdate(line string) string {
+	month := line[0:3]
+	line = monthmap[month] + line[4:]
+	return line
 }

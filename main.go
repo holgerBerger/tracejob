@@ -173,13 +173,23 @@ func main() {
 		Clientlogs.Wait()
 	}
 
-	// sort and print
+	// sort JM and NQS data
 	if !opts.NoColor && (opts.Dark || opts.Light) {
 		initcolors()
 	}
 	sort.SliceStable(alllogs.logs, func(i, j int) bool {
 		return alllogs.logs[i][:15] < alllogs.logs[j][:15]
 	})
+
+	// if client data is read, filter it, merge and sort again
+	if opts.Clients {
+		alllogs.logs = append(alllogs.logs, Clientlogs.Filter(alllogs.logs[0][:15], alllogs.logs[len(alllogs.logs)-1][:15])...)
+		sort.SliceStable(alllogs.logs, func(i, j int) bool {
+			return alllogs.logs[i][:15] < alllogs.logs[j][:15]
+		})
+	}
+
+	// print and filter
 	for _, l := range alllogs.logs {
 		filtered := false
 		if len(opts.Filter) > 0 {
