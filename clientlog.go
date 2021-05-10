@@ -26,6 +26,7 @@ func NewClientlog() ClientLog {
 
 // fetch log data if not yet done
 func (cl *ClientLog) Fetch(client string) {
+	// TODO fetch file only if not yet done
 	cl.mutex.Lock()
 	_, ok := cl.clients[client]
 	if ok {
@@ -92,6 +93,8 @@ func (cl *ClientLog) Filter(start string, end string) []string {
 
 		} // err
 	} // clients
+
+	// TODO delete files if no longer needed, cleanup needed
 
 	return loglines
 }

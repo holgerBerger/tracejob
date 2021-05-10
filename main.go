@@ -1,5 +1,23 @@
 package main
 
+/*
+	tracejob
+
+	command similar to PBS tracejob.
+	search through logs of batchserver and job manipulator of NEC NQSV
+	- index log files first, to read only needed files
+	- colorize output
+	- filter, positive or negative
+	- merge log files, including client journal
+	- search through compressed archived log files as well
+
+	TODO
+	- job summary (like, when and how often was a job suspended and restarted)
+	- cleanup for -C, caching for -C
+
+	(c) Holger Berger, 2020, 2021
+*/
+
 import (
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
